@@ -3,42 +3,95 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Http;
+using Newtonsoft.Json;
+using System.Xml;
 
 namespace TeknomediaNewsApi.Controllers
 {
     [Route("api/[controller]")]
-    public class ValuesController : Controller
-    {
-        // GET api/values
-        [HttpGet]
-        public IEnumerable<string> Get()
+    
+    // GET api/news
+    //URL/api/(namn på controllern, i detta fall news)
+    public class NewsController : Controller
+    {        
+
+        // GET api/news/expressen
+        //efter namn på controllern så specificeras namnet på metoden, i detta fall expressen
+
+        [HttpGet ("[action]")]
+        public async Task<string> Expressen()
         {
-            return new string[] { "value1", "value2" };
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("https://feeds.expressen.se");
+                var response = await client.GetAsync($"/nyheter/");
+                response.EnsureSuccessStatusCode();
+
+               
+
+                var stringResult = await response.Content.ReadAsStringAsync();
+
+                XmlDocument doc = new XmlDocument();
+                doc.LoadXml(stringResult);
+                string jsonText = JsonConvert.SerializeXmlNode(doc);
+
+                string jsonParsed = jsonText.Replace("#cdata-section", "cdata");
+
+                return jsonParsed;
+            }
         }
 
-        // GET api/values/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        // GET api/news/svd
+        //efter namn på controllern så specificeras namnet på metoden, i detta fall Svenska Dagbladet
+
+        [HttpGet("[action]")]
+        public async Task<string> Svd()
         {
-            return "value";
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("https://www.svd.se");
+                var response = await client.GetAsync($"/?service=rss");
+                response.EnsureSuccessStatusCode();
+
+
+
+                var stringResult = await response.Content.ReadAsStringAsync();
+
+                XmlDocument doc = new XmlDocument();
+                doc.LoadXml(stringResult);
+                string jsonText = JsonConvert.SerializeXmlNode(doc);
+
+                string jsonParsed = jsonText.Replace("#cdata-section", "cdata");
+
+                return jsonParsed;
+            }
         }
 
-        // POST api/values
-        [HttpPost]
-        public void Post([FromBody]string value)
-        {
-        }
+        // GET api/news/expressen
+        //efter namn på controllern så specificeras namnet på metoden, i detta fall Norrköping tidningar
 
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        [HttpGet("[action]")]
+        public async Task<string> Nt()
         {
-        }
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("http://www.nt.se");
+                var response = await client.GetAsync($"/nyheter/norrkoping/rss/");
+                response.EnsureSuccessStatusCode();
 
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+
+
+                var stringResult = await response.Content.ReadAsStringAsync();
+
+                XmlDocument doc = new XmlDocument();
+                doc.LoadXml(stringResult);
+                string jsonText = JsonConvert.SerializeXmlNode(doc);
+
+                string jsonParsed = jsonText.Replace("#cdata-section", "cdata");
+
+                return jsonParsed;
+            }
         }
     }
 }
