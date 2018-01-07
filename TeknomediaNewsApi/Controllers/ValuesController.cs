@@ -22,23 +22,31 @@ namespace TeknomediaNewsApi.Controllers
         [HttpGet ("[action]")]
         public async Task<string> Expressen()
         {
+            //Öppnar upp kopplingen
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri("https://feeds.expressen.se");
-                var response = await client.GetAsync($"/nyheter/");
+                //kör GetAsync metoden på httpclienten med URL som parameter.
+                //inget görs förens denna fått ett svar pga await keyword.
+                var response = await client.GetAsync("https://feeds.expressen.se/nyheter/");
+                //Kollar så att den fått tillbaka ett successmeddelande
                 response.EnsureSuccessStatusCode();
 
-               
-
+                //Här läser vi content på svaret som en string asynkront men väntar tills den är klar
                 var stringResult = await response.Content.ReadAsStringAsync();
 
+                //skapar ett nytt xml dokument
                 XmlDocument doc = new XmlDocument();
+                //laddar xml från strängen
                 doc.LoadXml(stringResult);
+                //serialiserar xml dokumentet till en json-sträng
                 string jsonText = JsonConvert.SerializeXmlNode(doc);
 
+                //Då jag inte visste hur jag skulle hantera cdata så valde jag att byta ut parametern för att ändå kunna använda detta i Angular
                 string jsonParsed = jsonText.Replace("#cdata-section", "cdata");
 
+                //skickar tillbaka den nya json-strängen.
                 return jsonParsed;
+                
             }
         }
 
@@ -50,12 +58,9 @@ namespace TeknomediaNewsApi.Controllers
         {
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri("https://www.svd.se");
-                var response = await client.GetAsync($"/?service=rss");
+                var response = await client.GetAsync("https://www.svd.se/?service=rss");
                 response.EnsureSuccessStatusCode();
-
-
-
+                    
                 var stringResult = await response.Content.ReadAsStringAsync();
 
                 XmlDocument doc = new XmlDocument();
@@ -65,6 +70,7 @@ namespace TeknomediaNewsApi.Controllers
                 string jsonParsed = jsonText.Replace("#cdata-section", "cdata");
 
                 return jsonParsed;
+
             }
         }
 
@@ -76,12 +82,9 @@ namespace TeknomediaNewsApi.Controllers
         {
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri("http://www.nt.se");
-                var response = await client.GetAsync($"/nyheter/norrkoping/rss/");
+                var response = await client.GetAsync("http://www.nt.se/nyheter/norrkoping/rss/");
                 response.EnsureSuccessStatusCode();
-
-
-
+                    
                 var stringResult = await response.Content.ReadAsStringAsync();
 
                 XmlDocument doc = new XmlDocument();
